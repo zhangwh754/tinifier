@@ -50,7 +50,7 @@ erase_lines(){
 
 process_image() {
   j=0
-  while [ ! -f compressed/"$file" ]; do
+  while [ ! -f compressed/"$output_file" ]; do
     j="$((j + 1))"
     if [ "$j" -gt 1 ]; then
       log_info "Re-try $((j - 1))\n"
@@ -89,9 +89,9 @@ process_image() {
       rm api_response.txt
       exit 1
     fi
-    curl "$download_url" --progress-bar --user api:"$api_key" --header "Content-Type: application/json" --data '{ "preserve": ["location", "creation"] }' --output compressed/"$file"
+    curl "$download_url" --progress-bar --user api:"$api_key" --header "Content-Type: application/json" --data '{ "preserve": ["location", "creation"] }' --output "compressed/$output_file"
     erase_lines 2
-    new_size="$(stat --printf="%s" compressed/"$file")"
+    new_size="$(stat --printf="%s" "compressed/$output_file")"
     if [ "$new_size" = "" ]; then
       new_size=1
     fi
@@ -137,9 +137,12 @@ if [ "$files_count" -eq 0 ]; then
 fi
 
 count=0
+output_counter=1  # Initialize the counter for output files
 
 while IFS= read -r file; do
   count="$((count + 1))"
+  output_file="img_$(printf "%02d" "$output_counter").${file##*.}"  # New file name with numbering and extension
+  output_counter="$((output_counter + 1))"  # Increment counter
   process_image
 done <tmp
 rm tmp
